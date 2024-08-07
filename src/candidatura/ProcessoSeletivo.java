@@ -14,13 +14,18 @@ public class ProcessoSeletivo {
     private static final int MAX_TENTATIVAS = 3;
 
     public static void main(String[] args) {
-        List<Candidato> candidatos = gerarCandidatosAleatorios(TOTAL_CANDIDATOS);
+        try {
+            List<Candidato> candidatos = gerarCandidatosAleatorios(TOTAL_CANDIDATOS);
+            List<Candidato> candidatosSelecionados = selecionarCandidatosParaEntrevista(candidatos);
+            System.out.println("CANDIDATOS SELECIONADOS:");
+            imprimirCandidatosSelecionados(candidatosSelecionados);
 
-        List<Candidato> candidatosSelecionados = selecionarCandidatosParaEntrevista(candidatos);
-
-        imprimirCandidatoSelecionados(candidatosSelecionados);
-
-        realizarTentativaDeContrato(candidatosSelecionados);
+            System.out.println();
+            System.out.println("TENTATIVAS DE CONTRATO:");
+            realizarTentativaDeContrato(candidatosSelecionados);
+        } catch (Exception e) {
+            System.err.println("Erro inesperado: " + e.getMessage());
+        }
     }
 
     private static List<Candidato> gerarCandidatosAleatorios(int quantidade) {
@@ -28,9 +33,8 @@ public class ProcessoSeletivo {
         Random random = new Random();
 
         for (int i = 1; i <= quantidade; i++) {
-            String nome = "Candidato " + (i + 1);
+            String nome = "Candidato " + i;
             double salarioPretendido = SALARIO_MIN + (SALARIO_MAX - SALARIO_MIN) * random.nextDouble();
-
             candidatos.add(new Candidato(nome, salarioPretendido));
         }
         return candidatos;
@@ -43,14 +47,14 @@ public class ProcessoSeletivo {
                 .collect(Collectors.toList());
     }
 
-    private static void imprimirCandidatoSelecionados(List<Candidato> candidados) {
+    private static void imprimirCandidatosSelecionados(List<Candidato> candidatos) {
         System.out.println("Candidatos selecionados para a entrevista:");
-        for (Candidato candidato : candidados) {
-            System.out.println(candidato.getNome() + " - Salário Pretendido: " + candidato.getSalarioPretendido());
+        for (Candidato candidato : candidatos) {
+            System.out.println("Nome: " + candidato.getNome() + " | Salário Pretendido: R$ "
+                    + String.format("%.2f", candidato.getSalarioPretendido()));
         }
     }
 
-    
     private static void realizarTentativaDeContrato(List<Candidato> candidatos) {
         Random random = new Random();
 
@@ -58,20 +62,24 @@ public class ProcessoSeletivo {
             boolean conseguiuContrato = false;
             int tentativa;
 
-            for (tentativa = 1; tentativa <= MAX_TENTATIVAS; tentativa++) {
-                if (random.nextBoolean()) {
-                    conseguiuContrato = true;
-                    break;
+            try {
+                for (tentativa = 1; tentativa <= MAX_TENTATIVAS; tentativa++) {
+                    if (random.nextBoolean()) {
+                        conseguiuContrato = true;
+                        break;
+                    }
                 }
-            }
 
-            if (conseguiuContrato) {
-                System.out.println(
-                        "CONSEGUIMOS CONTATO COM " + candidato.getNome() + " APÓS " + tentativa + " TENTATIVA(S)");
-            } else {
-                System.out.println("NÃO CONSEGUIMOS CONTATO COM O " + candidato.getNome());
+                if (conseguiuContrato) {
+                    System.out.println("Contato estabelecido com " + candidato.getNome() + " após " + tentativa
+                            + " tentativa(s).");
+                } else {
+                    throw new TentativaDeContratoException("Não foi possível estabelecer contato com "
+                            + candidato.getNome() + " após " + MAX_TENTATIVAS + " tentativa(s).");
+                }
+            } catch (TentativaDeContratoException e) {
+                System.err.println(e.getMessage());
             }
         }
-
     }
 }
